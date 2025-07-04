@@ -1,21 +1,13 @@
-import json
-from pathlib import Path
-
-DATA_FILE = Path("jobs.json")
+from supabase_config import supabase
 
 def load_jobs():
-    if DATA_FILE.exists():
-        with open(DATA_FILE, "r") as f:
-            return json.load(f)
-    return []
+    response = supabase.table("jobs").select("*").execute()
+    return response.data if response.data else []
 
 def save_job_post(client, title, description, skills):
-    jobs = load_jobs()
-    jobs.append({
+    supabase.table("jobs").insert({
         "client": client,
         "title": title,
         "description": description,
         "skills": skills
-    })
-    with open(DATA_FILE, "w") as f:
-        json.dump(jobs, f)
+    }).execute()

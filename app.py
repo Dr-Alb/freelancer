@@ -2,21 +2,19 @@ import streamlit as st
 from supabase_config import supabase
 from ai_matching import get_job_matches
 from utils import load_jobs, save_job_post
+from ai_assistant import get_ai_reply
 
-st.set_page_config(page_title="Freelancers Bot", layout="centered")
+st.set_page_config(page_title="Freelancers Bot", layout="wide")
 st.title("🤖 Freelancers Bot")
-st.subheader("Connecting Freelancers with Clients Using AI")
 
 # --- Supabase login/signup ---
 st.sidebar.subheader("Sign Up or Log In")
-
 email = st.sidebar.text_input("Email")
 password = st.sidebar.text_input("Password", type="password")
 auth_action = st.sidebar.radio("Action", ["Login", "Sign Up"])
 auth_button = st.sidebar.button("Go")
 
 user = None
-
 if auth_button:
     try:
         if auth_action == "Sign Up":
@@ -33,7 +31,7 @@ if auth_button:
 
 if st.session_state.get("logged_in", False):
     st.sidebar.success("Logged in as " + st.session_state["user_email"])
-    user_role = st.sidebar.radio("Select Role", ["Client", "Freelancer"])
+    user_role = st.sidebar.radio("Select Role", ["Client", "Freelancer", "Dashboard", "AI Assistant"])
 
     if user_role == "Client":
         st.header("📝 Post a Job")
@@ -61,3 +59,19 @@ if st.session_state.get("logged_in", False):
                 st.write(f"🔹 Description: {job['description']}")
                 st.write(f"🔧 Required Skills: {job['skills']}")
                 st.markdown("---")
+
+    elif user_role == "Dashboard":
+        st.header("📋 Job Dashboard")
+        jobs = load_jobs()
+        for job in jobs:
+            st.write(f"**{job['title']}** (by {job['client']})")
+            st.write(f"🔹 {job['description']}")
+            st.write(f"🔧 Skills: {job['skills']}")
+            st.markdown("---")
+
+    elif user_role == "AI Assistant":
+        st.header("🧠 AI Chat Assistant")
+        user_prompt = st.text_input("Ask something...")
+        if st.button("Ask"):
+            reply = get_ai_reply(user_prompt)
+            st.success(reply)
